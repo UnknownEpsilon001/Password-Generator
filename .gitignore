@@ -1,0 +1,15 @@
+# ===== Secrets =====
+*.key
+*.pem
+*.crt
+secrets/
+
+# ===== Logs & Runtime =====
+*.log
+logs/
+
+# ===== OS & Editors =====
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
