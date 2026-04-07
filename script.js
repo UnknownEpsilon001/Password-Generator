@@ -11,6 +11,10 @@ const encryptoggle = document.getElementById('encrypt-toggle');
 const encryptkeyinput = document.getElementById('encrypt-key');
 const exportButton = document.getElementById('export');
 const passwordnameinput = document.getElementById('passwordname');
+const decodebutton = document.getElementById('decode');
+const copydialogbutton = document.getElementById('copydialog');
+const passworddisplay = document.getElementById('passworddisplay');
+const switchtheme = document.getElementById('switch-theme');
 
 const importedpassworddisplay = document.getElementById('importedpassword');
 const importdecryptkeyinput = document.getElementById('import-decrypt-key');
@@ -19,15 +23,31 @@ const importFileInput = document.getElementById('import');
 
 let cachedPasswordList = null;
 
-importExportButton.addEventListener("click", () => {
-    importExportDialog.showModal();
+switchtheme.addEventListener('change', function() {
+    let theme = document.getElementById('theme-stylesheet');
+    if (theme.getAttribute('href') == 'style.css') {
+        theme.setAttribute('href', 'style2.css');
+    } else {
+        theme.setAttribute('href', 'style.css');
+    }
 });
 
 lengthSlider.addEventListener('input', () => {
-    lengthValue.textContent = lengthSlider.value;
+    lengthValue.textContent = lengthSlider.value;createpassword();
+    createpassword();
 });
 
-copybutton.addEventListener('click', copyToClipboard);
+copybutton.addEventListener('click', () => {
+    copyToClipboard(input);
+});
+
+copydialogbutton.addEventListener('click', () => {
+    copyToClipboard(importedpassworddisplay);
+});
+
+importExportButton.addEventListener("click", () => {
+    importExportDialog.showModal();
+});
 
 input.addEventListener('input', (event) => {
     calculateEntropy(event.target.value); // Calculate and display entropy
@@ -59,23 +79,45 @@ async function loadpasswordlist() {
 }
 
 function getStrengthTier(entropy) {
-  if (entropy < 40) return { label: "Very Weak", color: "#ff4d4d"};
-  if (entropy < 60) return { label: "Weak", color: "#ffa500"};
-  if (entropy < 80) return { label: "Medium", color: "#ffff00"};
-  if (entropy < 110) return { label: "Strong", color: "#00ff00"};
-  return { label: "Ultra Secure", color: "#00ffff"};
+  if (entropy < 40) return { label: "Very Weak"};
+  if (entropy < 60) return { label: "Weak"};
+  if (entropy < 80) return { label: "Medium"};
+  if (entropy < 110) return { label: "Strong"};
+  return { label: "Ultra Secure"};
 }
 
-async function copyToClipboard() {
+async function copyToClipboard(element) {
+    if (!element) return;
+
+    // Get the text based on element type
+    // Inputs use .value | Spans/Divs use .textContent
+    const textToCopy = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' 
+        ? element.value 
+        : element.textContent;
+
+    if (!textToCopy) {
+        console.warn("Nothing to copy!");
+        return;
+    }
+
     try {
-        input.focus();
-        input.select();
-        await navigator.clipboard.writeText(input.value);
+        // Use the Clipboard API
+        await navigator.clipboard.writeText(textToCopy);
+        
+        // Visual feedback: Select text if it's an input
+        if (element.tagName === 'INPUT') {
+            element.focus();
+            element.select();
+        }
+
+        // imple visual alert to confirm it worked
+        alert('Copied: ' + textToCopy); 
+        
     } catch (err) {
         console.error('Failed to copy: ', err);
-        alert('Failed to copy password. Please try again.');
+        alert('Failed to copy. Please try again.');
     }
-}  
+}
 
 function downloadFile(content, filename) {
     const blob = new Blob([content], { type: 'text/plain' });
@@ -104,9 +146,7 @@ exportButton.addEventListener('click', async () => {
     }
 });
 
-createpassbutton.addEventListener('click', function() {
-    const length = parseInt(lengthValue.textContent);
-
+function createpassword(length = parseInt(lengthValue.textContent)) {
     const lower = "abcdefghijklmnopqrstuvwxyz";
     const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const digits = "0123456789";
@@ -136,6 +176,10 @@ createpassbutton.addEventListener('click', function() {
     const password = passwordArray.join('');
     input.value = password;
     calculateEntropy(password);
+}
+
+createpassbutton.addEventListener('click', () => {
+    createpassword();
 });
 
 
@@ -187,7 +231,7 @@ async function calculateEntropy(password) {
 
 
 importFileInput.addEventListener('change', () => {
-  if (importFileInput.files.length > 0) {
+    if (importFileInput.files.length > 0) {
     const file = importFileInput.files[0]; // Get the first selected file
 
     if (!file.name.endsWith('.txt') && !file.name.endsWith('.passgen')) {
@@ -200,33 +244,49 @@ importFileInput.addEventListener('change', () => {
         return;
     }
 
-    if (file.name.endsWith('.txt')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            importedpassworddisplay.value = content;
-        };
-        reader.readAsText(file);
-    }
-    
-    if (file.name.endsWith('.passgen') && !importdecryptkeyinput.value) {
-        alert('Please enter the encryption key to import this file.');
-        return;
-    }
-
     if (file.name.endsWith('.passgen')) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const content = e.target.result;
-            importedpassworddisplay.value = await decryptPassword(content, importdecryptkeyinput.value) || content;
-        };
-        reader.readAsText(file);
+        importdecryptkeyinput.style.display = 'block';
+        return;
+    } else {
+        importdecryptkeyinput.style.display = 'none';
     }
 
   } else {
     console.log("No file selected.");
   }
 });
+
+decodebutton.addEventListener('click', async () => {
+    if (importFileInput.files.length > 0) {
+        const file = importFileInput.files[0]; // Get the first selected file
+
+        if (file.name.endsWith('.passgen')) {
+            if (!importdecryptkeyinput.value) {
+                alert('Please enter the encryption key to import this file.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const content = e.target.result;
+                importedpassworddisplay.value = await decryptPassword(content, importdecryptkeyinput.value) || content;
+            };
+            reader.readAsText(file);
+        }
+
+        if (file.name.endsWith('.txt')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                importedpassworddisplay.value = content;
+        };
+        reader.readAsText(file);
+    }
+
+    } else {
+        alert("No file selected. Please select a .txt or .passgen file to decode.");
+    }
+});
+
 const CUSTOM_ALPHABET = "6Qd~F{CpYxHloTpnD3ZMH)cXY:-&PW::o(N.4*jOs/Xx]/>q#7=JSaZwBb;HZSpx#o~{j%0|OI6pEynXsW:z3a==U_s4Soqo2+Yr";
 const SALT = "kiP~mS]vAMd#)]aEV+=PIhBoF_gvoyw/6J/INptwRHaBXZu:iV@+epfbRBX?2]%S-!S.YZS$%ALEs|yRvmN4]5J=EPovp(C#~0Zi";
 

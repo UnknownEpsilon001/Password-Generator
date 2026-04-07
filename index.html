@@ -1,40 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="style.css">
+    <link id="theme-stylesheet" rel="stylesheet" href="style.css">
     <title>Password Generator</title>
 </head>
 <body>
 
+<div class="container">
+
     <h1>Password Generator</h1>
-    <p>This is a simple password generator.</p>
-    <input type="range" id="length" min="8" max="100" value="16">
-    <label for="length">Password Length: <span id="lengthValue">16</span></label>
+    <p class="subtitle">Generate passwords instantly.</p>
+    <label class="switch">
+        <input type="checkbox" id="switch-theme"> Switch Theme
+    <span class="slider"></span>
+</label>
+    <div class="card">
+
+        <div class="input-group">
+            <label>Password Length: <span id="lengthValue">16</span></label>
+            <input type="range" id="length" min="8" max="100" value="16">
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="password" placeholder="Your password will appear here">
+        </div>
+
+        <div class="stats">
+            <p id="entropy">Entropy: 0 bits</p>
+            <p id="entropytier">Strength: N/A</p>
+        </div>
+
+        <div class="buttons">
+            <button id="generate">Generate</button>
+            <button id="copy">Copy</button>
+            <button id="import-export">Import / Export</button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- dialog stays same -->
+<dialog id="import-export-dialog">
+    <h2>Import / Export</h2>
+    <p>Your Password: <span id="passworddisplay"></span></p>
+    <input type="text" id="passwordname" placeholder="Password Name">
+
+    <label>
+        <input type="checkbox" id="encrypt-toggle" onclick="toggleEncryption()"> Encrypt
+    </label>
     <br>
-    <input type="text" id="password" name="password" placeholder="Password will appear here">    
-    <p id="entropy">Password Entropy: 0 bits</p>
-    <p id="entropytier">Password Strength: N/A</p>
-    <button id="generate">Generate Password</button>
-    <button id="copy">Copy to Clipboard</button>
-    <button id="import-export">Import/Export</button>
 
-    <dialog id="import-export-dialog">
-        <h2>Import-Export</h2>
-        <p>Import or export your password here.</p>
-        <!-- Form with method="dialog" automatically closes the popup -->
-        <input type="text" id="passwordname" name="passwordname" placeholder="Password Name">
-        <input type="checkbox" id="encrypt-toggle" value="false" onclick="toggleEncryption()"> Encrypt
-        <input type="text" style="display:none" id="encrypt-key" name="encrypt-key" placeholder="Encryption Key">
-        <button id="export">Export</button>
-        <br>
-        <input type="file" id="import" accept=".txt, .passgen" > </input>
-        <input type="text" id="import-decrypt-key" name="import-decrypt-key" placeholder="Your Decryption Key">
-        <input type="text" id="importedpassword" name="importedpassword" placeholder="Your password will appear here" readonly>   
-        <form method="dialog">
-            <button>Close</button>
-        </form>
-    </dialog>
+    <input type="text" id="encrypt-key" placeholder="Encryption Key" style="display:none">
 
-    <script src="script.js"></script>
+    <button id="export">Export</button>
+
+    <hr>
+
+    <input type="file" id="import" accept=".txt, .passgen">
+    <br>
+    <input type="text" style="display:none" id="import-decrypt-key" placeholder="Decryption Key">
+    <input type="text" id="importedpassword" placeholder="Imported password" readonly>
+    <br>
+    <button id="decode">Decode</button>
+    <button id="copydialog">Copy</button>
+    <form method="dialog">
+        <button>Close</button>
+    </form>
+</dialog>
+
+<script src="script.js"></script>
 </body>
 </html>
