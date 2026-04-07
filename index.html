@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="style.css">
+    <title>Password Generator</title>
+</head>
+<body>
+
+    <h1>Password Generator</h1>
+    <p>This is a simple password generator.</p>
+    <input type="range" id="length" min="8" max="100" value="16">
+    <label for="length">Password Length: <span id="lengthValue">16</span></label>
+    <br>
+    <input type="text" id="password" name="password" placeholder="Password will appear here">    
+    <p id="entropy">Password Entropy: 0 bits</p>
+    <p id="entropytier">Password Strength: N/A</p>
+    <button id="generate">Generate Password</button>
+    <button id="copy">Copy to Clipboard</button>
+    <button id="import-export">Import/Export</button>
+
+    <dialog id="import-export-dialog">
+        <h2>Import-Export</h2>
+        <p>Import or export your password here.</p>
+        <!-- Form with method="dialog" automatically closes the popup -->
+        <input type="text" id="passwordname" name="passwordname" placeholder="Password Name">
+        <input type="checkbox" id="encrypt-toggle" value="false" onclick="toggleEncryption()"> Encrypt
+        <input type="text" style="display:none" id="encrypt-key" name="encrypt-key" placeholder="Encryption Key">
+        <button id="export">Export</button>
+        <br>
+        <input type="file" id="import" accept=".txt, .passgen" > </input>
+        <input type="text" id="import-decrypt-key" name="import-decrypt-key" placeholder="Your Decryption Key">
+        <input type="text" id="importedpassword" name="importedpassword" placeholder="Your password will appear here" readonly>   
+        <form method="dialog">
+            <button>Close</button>
+        </form>
+    </dialog>
+
+    <script src="script.js"></script>
+</body>
+</html>
