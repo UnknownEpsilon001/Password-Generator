@@ -46,6 +46,7 @@ copydialogbutton.addEventListener('click', () => {
 });
 
 importExportButton.addEventListener("click", () => {
+    passworddisplay.textContent = input.value // Update the password display in the dialog
     importExportDialog.showModal();
 });
 
@@ -66,7 +67,7 @@ async function loadpasswordlist() {
     if (cachedPasswordList) return cachedPasswordList; // return cache if available
 
     try {
-        const response = await fetch('100k-most-used-passwords-NCSC.txt');
+        const response = await fetch('passwordlist.txt');
         const data = await response.text();
         cachedPasswordList = new Set(
             data.split('\n').map(line => line.trim()).filter(line => line.length > 0)
@@ -78,6 +79,8 @@ async function loadpasswordlist() {
     }
 }
 
+loadpasswordlist(); // Preload password list on page load
+ 
 function getStrengthTier(entropy) {
   if (entropy < 40) return { label: "Very Weak"};
   if (entropy < 60) return { label: "Weak"};
@@ -110,9 +113,12 @@ async function copyToClipboard(element) {
             element.select();
         }
 
-        // imple visual alert to confirm it worked
-        alert('Copied: ' + textToCopy); 
-        
+        const original = copybutton.textContent;
+        copybutton.textContent = 'Copied!';
+        setTimeout(() => {
+            copybutton.textContent = original;
+        }, 1500);
+
     } catch (err) {
         console.error('Failed to copy: ', err);
         alert('Failed to copy. Please try again.');
@@ -217,16 +223,32 @@ async function calculateEntropy(password) {
         return 0;
     }
 
+    if (/^(.)\1+$/.test(password)) {
+        entropyDisplay.textContent = `Password Entropy: 0 bits (Repeated Characters)`;
+        strengthTierDisplay.textContent = `Password Strength: Trash`;
+        return 0;
+    }
+
     let charsetSize = 0;
     if (/[a-z]/.test(password)) charsetSize += 26; // Lowercase letters
     if (/[A-Z]/.test(password)) charsetSize += 26; // Uppercase letters
     if (/[0-9]/.test(password)) charsetSize += 10; // Digits
     if (/[^a-zA-Z0-9]/.test(password)) charsetSize += 32; // Special characters (approximate)
-        
-    const entropy = password.length * Math.log2(charsetSize);
-    entropyDisplay.textContent = `Password Entropy: ${entropy.toFixed(2)} bits`; // Update entropy display
-    strengthTierDisplay.textContent = `Password Strength: ${getStrengthTier(entropy).label}`; // Update strength tier display
-    return entropy.toFixed(2); // Return entropy rounded to 2 decimal places
+    
+    const uniqueChars = new Set(password).size;
+    const uniqueRatio = uniqueChars / password.length;
+
+    let repetitionPenalty = 1;
+    if (uniqueRatio < 0.3) repetitionPenalty = 0.3;
+    else if (uniqueRatio < 0.5) repetitionPenalty = 0.6;
+
+    const rawEntropy = password.length * Math.log2(charsetSize);
+    const entropy = rawEntropy * repetitionPenalty;
+
+    entropyDisplay.textContent = `Password Entropy: ${entropy.toFixed(2)} bits`;
+    strengthTierDisplay.textContent = `Password Strength: ${getStrengthTier(entropy).label}`;
+
+    return parseFloat(entropy.toFixed(2));
 }
 
 
@@ -268,7 +290,7 @@ decodebutton.addEventListener('click', async () => {
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const content = e.target.result;
-                importedpassworddisplay.value = await decryptPassword(content, importdecryptkeyinput.value) || content;
+                importedpassworddisplay.value = await decryptPassword(content, importdecryptkeyinput.value) || "Wrong key or corrupted file. Decryption failed.";
             };
             reader.readAsText(file);
         }
@@ -287,9 +309,6 @@ decodebutton.addEventListener('click', async () => {
     }
 });
 
-const CUSTOM_ALPHABET = "6Qd~F{CpYxHloTpnD3ZMH)cXY:-&PW::o(N.4*jOs/Xx]/>q#7=JSaZwBb;HZSpx#o~{j%0|OI6pEynXsW:z3a==U_s4Soqo2+Yr";
-const SALT = "kiP~mS]vAMd#)]aEV+=PIhBoF_gvoyw/6J/INptwRHaBXZu:iV@+epfbRBX?2]%S-!S.YZS$%ALEs|yRvmN4]5J=EPovp(C#~0Zi";
-
 async function deriveKey(password, salt) {
     const enc = new TextEncoder();
 
@@ -306,7 +325,7 @@ async function deriveKey(password, salt) {
     return crypto.subtle.deriveKey(
         {
             name: "PBKDF2",
-            salt: enc.encode(salt),
+            salt: salt instanceof Uint8Array ? salt : enc.encode(salt),
             iterations: 100000, // slows down brute force attackers
             hash: "SHA-256"
         },
