@@ -1,9 +1,14 @@
 # Password-Generator
+Secure Password Generator with Entropy Analysis
 
-Simple Password Generator 
-You can generate password here or check your password Strength
+A browser-based password generator that uses cryptographically secure randomness,
+entropy calculation, and optional client-side encryption for exporting data.
 
 ## Features
-- Export Encryption
-- Import Decryption
-- Password Strength Checker
+- Cryptographically secure random generation
+- Password entropy calculation
+- Common password blacklist checking
+- Import/export system with custom .passgen format
+
+Note: This tool is designed for educational and local use.
+Encryption security depends on the strength of the user-provided key.
