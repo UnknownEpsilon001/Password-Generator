@@ -12,3 +12,7 @@ entropy calculation, and optional client-side encryption for exporting data.
 
 Note: This tool is designed for educational and local use.
 Encryption security depends on the strength of the user-provided key.
+
+## License
+
+MIT License — Copyright (c) 2026 Leo (UnknownAimo). See [LICENSE](LICENSE) for details.
