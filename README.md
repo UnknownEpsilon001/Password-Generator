@@ -1,3 +1,5 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/unknownaimo)
+
 # Password Generator
 
 A browser-based password generator with entropy analysis, common password detection, and optional AES-256 encrypted export. No server, no tracking — runs entirely client-side.
